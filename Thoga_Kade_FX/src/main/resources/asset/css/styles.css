@@ -1,0 +1,43 @@
+.btn-search {
+    -fx-border-color: #000000;
+}
+.btn-search:hover {
+    -fx-border-color: #1e90ff;
+}
+.btn-search:focus-visible {
+    -fx-border-color: #1e90ff;
+}
+.btn-update {
+    -fx-border-color: #000000;
+}
+.btn-update:hover {
+    -fx-border-color: #0ad31b;
+}
+.btn-update:focus-visible {
+    -fx-border-color: #0ad31b;
+}
+.btn-delete {
+    -fx-border-color: #000000;
+}
+.btn-delete:hover {
+    -fx-border-color: #ff4d07;
+}
+.btn-delete:focus-visible {
+    -fx-border-color: #ff4d07;
+}
+.btn-add {
+    -fx-border-color: #000000;
+}
+.btn-add:hover {
+    -fx-border-color: #45ff07;
+}
+.btn-add:focus-visible {
+    -fx-border-color: #45ff07;
+}
+.tab-pane {
+    -fx-border-color: #1e90ff;
+    -fx-border-radius: 5px;
+}
+.date-picker:focus-visible {
+    -fx-border-color: #1e90ff;
+}

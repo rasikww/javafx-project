@@ -1,0 +1,9 @@
+
+	java:S112+"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ8“Ö¬³ğ1J$44fd5dce-b26d-4f9d-ba8d-7a2f0b24f3ce
+	java:S112-"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ8”Ö¬³ğ1J$31a12c91-42fe-49d3-ae6e-5453f23f8a60
+q
+java:S1121".Extract the assignment out of this expression.(¢ê„•8–Ö¬³ğ1J$1b0a5acb-bdf3-4aa5-8535-19889e8f8d51
+Ü
+java:S6548"˜A Singleton implementation was detected. Make sure the use of the Singleton pattern is required and the implementation is the right one for the context.(¢ÊÙÓ8Ö¬³ğ1J$3dc3c2d1-4fbe-4de1-8823-35c0e4378cb9
+‡
+java:S2147,"DCombine this catch with the one at line 42, which has the same body.(ıàÑÎ8¢Ö¬³ğ1J$a7de8ed7-ab94-48a7-b5b6-4d389c96a7f5

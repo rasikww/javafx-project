@@ -23,8 +23,7 @@ public class CustomerController {
         return instance;
     }
 
-    public ObservableList<Customer> getAllCustomers(){
-        try {
+    public ObservableList<Customer> getAllCustomers() throws SQLException, ClassNotFoundException {
             ResultSet resultSet = DBConnection.getInstance().getConnection().createStatement().executeQuery("SELECT * FROM customer");
             ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
             while (resultSet.next()){
@@ -43,14 +42,13 @@ public class CustomerController {
                 );
             }
             return allCustomers;
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+
 
     }
-    public Customer searchCustomer(String id){
-        try {
-            ResultSet resultSet = DBConnection.getInstance().getConnection().createStatement().executeQuery("SELECT * FROM customer WHERE CustID='" + id +"'");
+    public Customer searchCustomer(String id) throws SQLException, ClassNotFoundException {
+            PreparedStatement preparedStatement = DBConnection.getInstance().getConnection().prepareStatement("SELECT * FROM customer WHERE CustID=?");
+            preparedStatement.setString(1,id);
+            ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()){
                 return new Customer(
                         resultSet.getString(1),
@@ -64,9 +62,6 @@ public class CustomerController {
                         resultSet.getString(9)
                 );
             }
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
         return null;
     }
 
@@ -129,5 +124,31 @@ public class CustomerController {
         } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Boolean deleteCustomer(String id) {
+        try {
+            PreparedStatement preparedStatement = DBConnection.getInstance().getConnection().prepareStatement("DELETE FROM customer WHERE CustID=?");
+            preparedStatement.setString(1,id);
+            return preparedStatement.executeUpdate()>0;
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public boolean addCustomer(Customer generatedCustomer) throws SQLException, ClassNotFoundException {
+
+        PreparedStatement preparedStatement = DBConnection.getInstance().getConnection().prepareStatement("INSERT INTO customer VALUES (?,?,?,?,?,?,?,?,?)");
+            preparedStatement.setString(1,generatedCustomer.getId());
+            preparedStatement.setString(2,generatedCustomer.getTitle());
+            preparedStatement.setString(3,generatedCustomer.getName());
+            preparedStatement.setDate(4,Date.valueOf(generatedCustomer.getDob()));
+            preparedStatement.setDouble(5,generatedCustomer.getSalary());
+            preparedStatement.setString(6,generatedCustomer.getAddress());
+            preparedStatement.setString(7,generatedCustomer.getCity());
+            preparedStatement.setString(8,generatedCustomer.getProvince());
+            preparedStatement.setString(9,generatedCustomer.getPostalCode());
+            return preparedStatement.executeUpdate()>0;
     }
 }

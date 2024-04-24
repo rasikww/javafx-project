@@ -10,13 +10,12 @@ import javafx.event.Event;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import org.example.model.Customer;
 
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.ResourceBundle;
-import java.util.regex.Pattern;
 
 public class CustomerFormController implements Initializable {
     public Tab tabSearch,tabAddCustomer,tabAllCustomerDetails;
@@ -49,7 +48,12 @@ public class CustomerFormController implements Initializable {
         String customerId = txtCustomerId.getText();
         Boolean isValidCustomerId = CustomerController.getInstance().validateCustomer(customerId);
         if (isValidCustomerId){
-            Customer searchedCustomer = CustomerController.getInstance().searchCustomer(customerId);
+            Customer searchedCustomer = null;
+            try {
+                searchedCustomer = CustomerController.getInstance().searchCustomer(customerId);
+            } catch (SQLException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             if (searchedCustomer == null) {
                 new Alert(Alert.AlertType.ERROR,customerId+" Customer does not exist").show();
                 clearCustomerSearchData();
@@ -85,7 +89,7 @@ public class CustomerFormController implements Initializable {
     }
 
     public void btnUpdateOnClick(ActionEvent actionEvent) {
-        Customer generatedCustomer = generateCustomerFromInfo();
+        Customer generatedCustomer = generateCustomerFromInfo1();
         if(generatedCustomer!=null){
             boolean isUpdateSuccessful = CustomerController.getInstance().updateCustomer(generatedCustomer);
             if (isUpdateSuccessful) new Alert(Alert.AlertType.CONFIRMATION, "Update Succesful").show();
@@ -93,14 +97,14 @@ public class CustomerFormController implements Initializable {
         }
     }
 
-    private Customer generateCustomerFromInfo() {
+    private Customer generateCustomerFromInfo1() {
         if (txtCustomerId.getText().isEmpty() || txtName.getText().isEmpty() || txtSalary.getText().isEmpty() || !txtSalary.getText().matches("^\\+?\\d+(\\.\\d*)?$") || !(CustomerController.getInstance().validateCustomer(txtCustomerId.getText()))) {
             new Alert(Alert.AlertType.ERROR,"Enter Valid Info").show();
             return null;
         }else {
             try {
                 return new Customer(
-                        txtCustomerId.getText(),
+                        txtCustomerId.getText().substring(0,1).toUpperCase()+txtCustomerId.getText().substring(1),
                         cmbTitle.getSelectionModel().getSelectedItem().toString(),
                         txtName.getText(),
                         datePickerDob.getValue(),
@@ -117,11 +121,50 @@ public class CustomerFormController implements Initializable {
             }
         }
     }
+    private Customer generateCustomerFromInfo2() {
+        if (txtNextCustomerId.getText().isEmpty() || txtNameAdd.getText().isEmpty() || txtSalaryAdd.getText().isEmpty() || !txtSalaryAdd.getText().matches("^\\+?\\d+(\\.\\d*)?$") || !(CustomerController.getInstance().validateCustomer(txtNextCustomerId.getText()))) {
+            new Alert(Alert.AlertType.ERROR,"Enter Valid Info").show();
+            return null;
+        }else {
+            try {
+                return new Customer(
+                        txtNextCustomerId.getText().substring(0,1).toUpperCase()+txtNextCustomerId.getText().substring(1),
+                        cmbTitleAdd.getSelectionModel().getSelectedItem().toString(),
+                        txtNameAdd.getText(),
+                        datePickerDobAdd.getValue(),
+                        Double.parseDouble(txtSalaryAdd.getText()),
+                        txtAddressAdd.getText(),
+                        txtCityAdd.getText(),
+                        txtProvinceAdd.getText(),
+                        txtPostalCodeAdd.getText()
+                );
+            } catch (NullPointerException|NumberFormatException e) {
+                new Alert(Alert.AlertType.ERROR,"Invalid Data").show();
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
     public void btnDeleteOnAction(ActionEvent actionEvent) {
+        searchProcess();
+        Boolean isDeleted = CustomerController.getInstance().deleteCustomer(txtCustomerId.getText());
+        if (isDeleted) new Alert(Alert.AlertType.CONFIRMATION, txtCustomerId.getText() +" Customer Deleted").show();
+        else new Alert(Alert.AlertType.ERROR, "Customer Delete Error!").show();
     }
 
     public void btnAddOnClick(ActionEvent actionEvent) {
+        Customer generatedCustomer = generateCustomerFromInfo2();
+        if(generatedCustomer!=null){
+            boolean isAddingSuccessful = false;
+            try {
+                isAddingSuccessful = CustomerController.getInstance().addCustomer(generatedCustomer);
+            } catch (SQLException | NullPointerException | ClassNotFoundException e) {
+                new Alert(Alert.AlertType.ERROR,"Please check the values").show();
+                throw new RuntimeException(e);
+            }
+            if (isAddingSuccessful) new Alert(Alert.AlertType.CONFIRMATION, "Customer added Succesfully").show();
+            else new Alert(Alert.AlertType.ERROR, "Customer was NOT added").show();
+        }
     }
 
     public void btnRefreshOnClick(ActionEvent actionEvent) {
@@ -138,8 +181,13 @@ public class CustomerFormController implements Initializable {
         colProvince.setCellValueFactory(new PropertyValueFactory<>("province"));
         colPostalCode.setCellValueFactory(new PropertyValueFactory<>("postalCode"));
 
-        ObservableList<Customer> allCustomers = CustomerController.getInstance().getAllCustomers();
-        customerTable.setItems(allCustomers);
+        ObservableList<Customer> allCustomers = null;
+        try {
+            allCustomers = CustomerController.getInstance().getAllCustomers();
+            customerTable.setItems(allCustomers);
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void txtCustomerIdOnKeyPressed(KeyEvent keyEvent) {

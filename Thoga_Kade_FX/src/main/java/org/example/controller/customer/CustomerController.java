@@ -72,6 +72,9 @@ public class CustomerController {
     }
     public String generateNextCustomerId(){
         String lastCustomerId = getLastCustomer().getId();
+        if (lastCustomerId == null) {
+            return "C001";
+        }
         int newNumber = Integer.parseInt(lastCustomerId.substring(1))+1;
         return String.format("C%03d",newNumber);
     }
@@ -84,6 +87,7 @@ public class CustomerController {
                         resultSet.getString(1),
                         resultSet.getString(2),
                         resultSet.getString(3),
+
                         resultSet.getDate(4).toLocalDate(),
                         resultSet.getDouble(5),
                         resultSet.getString(6),

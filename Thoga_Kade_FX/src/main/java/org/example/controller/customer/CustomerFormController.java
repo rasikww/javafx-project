@@ -15,19 +15,22 @@ import org.example.model.Customer;
 
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ResourceBundle;
 
 public class CustomerFormController implements Initializable {
     public Tab tabSearch,tabAddCustomer,tabAllCustomerDetails;
     public JFXTextField txtCustomerId,txtName,txtSalary,txtAddress,txtCity,txtProvince,txtPostalCode,txtNextCustomerId;
     public JFXButton btnSearch,btnUpdate,btnDelete,btnAdd,btnRefresh;
-    public JFXComboBox cmbTitle;
+    public JFXComboBox<String> cmbTitle;
     public DatePicker datePickerDob;
-    public JFXComboBox cmbTitleAdd;
+    public JFXComboBox<String> cmbTitleAdd;
     public JFXTextField txtNameAdd,txtSalaryAdd,txtAddressAdd,txtCityAdd,txtProvinceAdd,txtPostalCodeAdd;
     public DatePicker datePickerDobAdd;
-    public TableColumn colCustomerId,colTitle,colName,colDob,colSalary,colAddress,colCity,colProvince,colPostalCode;
-    public TableView customerTable;
+    public TableColumn<Customer,String> colCustomerId,colTitle,colName,colAddress,colCity,colProvince,colPostalCode;
+    public TableColumn<Customer,LocalDate> colDob;
+    public TableColumn<Customer, Double> colSalary;
+    public TableView<Customer> customerTable;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -48,17 +51,16 @@ public class CustomerFormController implements Initializable {
         String customerId = txtCustomerId.getText();
         Boolean isValidCustomerId = CustomerController.getInstance().validateCustomer(customerId);
         if (isValidCustomerId){
-            Customer searchedCustomer = null;
             try {
-                searchedCustomer = CustomerController.getInstance().searchCustomer(customerId);
+                Customer searchedCustomer = CustomerController.getInstance().searchCustomer(customerId);
+                if (searchedCustomer == null) {
+                    new Alert(Alert.AlertType.ERROR,customerId+" Customer does not exist").show();
+                    clearCustomerSearchData();
+                }else{
+                    showCustomerSearchData(searchedCustomer);
+                }
             } catch (SQLException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
-            }
-            if (searchedCustomer == null) {
-                new Alert(Alert.AlertType.ERROR,customerId+" Customer does not exist").show();
-                clearCustomerSearchData();
-            }else{
-                showCustomerSearchData(searchedCustomer);
             }
         }else{
             new Alert(Alert.AlertType.ERROR,"Enter Valid Customer ID").show();
@@ -92,7 +94,7 @@ public class CustomerFormController implements Initializable {
         Customer generatedCustomer = generateCustomerFromInfo1();
         if(generatedCustomer!=null){
             boolean isUpdateSuccessful = CustomerController.getInstance().updateCustomer(generatedCustomer);
-            if (isUpdateSuccessful) new Alert(Alert.AlertType.CONFIRMATION, "Update Succesful").show();
+            if (isUpdateSuccessful) new Alert(Alert.AlertType.CONFIRMATION, "Update Successful").show();
             else new Alert(Alert.AlertType.ERROR, "Update was unsuccessful").show();
         }
     }
@@ -105,7 +107,7 @@ public class CustomerFormController implements Initializable {
             try {
                 return new Customer(
                         txtCustomerId.getText().substring(0,1).toUpperCase()+txtCustomerId.getText().substring(1),
-                        cmbTitle.getSelectionModel().getSelectedItem().toString(),
+                        cmbTitle.getSelectionModel().getSelectedItem(),
                         txtName.getText(),
                         datePickerDob.getValue(),
                         Double.parseDouble(txtSalary.getText()),
@@ -129,7 +131,7 @@ public class CustomerFormController implements Initializable {
             try {
                 return new Customer(
                         txtNextCustomerId.getText().substring(0,1).toUpperCase()+txtNextCustomerId.getText().substring(1),
-                        cmbTitleAdd.getSelectionModel().getSelectedItem().toString(),
+                        cmbTitleAdd.getSelectionModel().getSelectedItem(),
                         txtNameAdd.getText(),
                         datePickerDobAdd.getValue(),
                         Double.parseDouble(txtSalaryAdd.getText()),
@@ -155,15 +157,14 @@ public class CustomerFormController implements Initializable {
     public void btnAddOnClick(ActionEvent actionEvent) {
         Customer generatedCustomer = generateCustomerFromInfo2();
         if(generatedCustomer!=null){
-            boolean isAddingSuccessful = false;
             try {
-                isAddingSuccessful = CustomerController.getInstance().addCustomer(generatedCustomer);
+                boolean isAddingSuccessful = CustomerController.getInstance().addCustomer(generatedCustomer);
+                if (isAddingSuccessful) new Alert(Alert.AlertType.CONFIRMATION, "Customer added Successfully").show();
+                else new Alert(Alert.AlertType.ERROR, "Customer was NOT added").show();
             } catch (SQLException | NullPointerException | ClassNotFoundException e) {
                 new Alert(Alert.AlertType.ERROR,"Please check the values").show();
                 throw new RuntimeException(e);
             }
-            if (isAddingSuccessful) new Alert(Alert.AlertType.CONFIRMATION, "Customer added Succesfully").show();
-            else new Alert(Alert.AlertType.ERROR, "Customer was NOT added").show();
         }
     }
 
@@ -181,9 +182,8 @@ public class CustomerFormController implements Initializable {
         colProvince.setCellValueFactory(new PropertyValueFactory<>("province"));
         colPostalCode.setCellValueFactory(new PropertyValueFactory<>("postalCode"));
 
-        ObservableList<Customer> allCustomers = null;
         try {
-            allCustomers = CustomerController.getInstance().getAllCustomers();
+            ObservableList<Customer> allCustomers = CustomerController.getInstance().getAllCustomers();
             customerTable.setItems(allCustomers);
         } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);

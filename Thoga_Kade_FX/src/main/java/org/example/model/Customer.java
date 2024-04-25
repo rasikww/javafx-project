@@ -20,4 +20,8 @@ public class Customer {
     private String city;
     private String province;
     private String postalCode;
+
+    public String toStringIdName(){
+        return this.getId()+" - "+this.getName();
+    }
 }

@@ -41,7 +41,7 @@
             <JFXComboBox fx:id="cmbItem" focusColor="DODGERBLUE" layoutX="24.0" layoutY="21.0" onAction="#cmbItemOnAction" prefHeight="25.0" prefWidth="246.0" promptText="Select Item" />
             <Label layoutX="24.0" layoutY="70.0" text="Description" />
             <Label layoutX="24.0" layoutY="99.0" text="Pack Size" />
-            <Label layoutX="24.0" layoutY="130.0" text="Unit Price" />
+            <Label layoutX="24.0" layoutY="130.0" prefHeight="17.0" prefWidth="85.0" text="Unit Price (Rs.)" />
             <Label layoutX="24.0" layoutY="159.0" text="Quantity Available" />
             <Label layoutX="24.0" layoutY="190.0" text="Required Quantity" />
             <Label layoutX="131.0" layoutY="159.0" prefHeight="17.0" prefWidth="1.0" text=":" />
@@ -63,12 +63,12 @@
       </Pane>
       <Pane layoutX="379.0" layoutY="130.0" prefHeight="542.0" prefWidth="542.0" styleClass="pane" stylesheets="@../asset/css/styles.css">
          <children>
-            <TableView fx:id="tblCart" layoutX="10.0" layoutY="53.0" prefHeight="245.0" prefWidth="521.0" stylesheets="@../asset/css/styles.css">
+            <TableView fx:id="tblCart" layoutX="10.0" layoutY="53.0" onMouseClicked="#tblViewOnMouseClick" prefHeight="245.0" prefWidth="521.0" stylesheets="@../asset/css/styles.css">
               <columns>
                 <TableColumn fx:id="colItemCode" editable="false" prefWidth="75.0" text="Item Code" />
                 <TableColumn fx:id="colDesc" editable="false" prefWidth="75.0" text="Description" />
                   <TableColumn fx:id="colUnitPrice" editable="false" prefWidth="75.0" text="Unit Price" />
-                  <TableColumn fx:id="colQty" onEditCommit="#colQtyOnEdit" prefWidth="75.0" text="Quantity" />
+                  <TableColumn fx:id="colQty" editable="false" prefWidth="75.0" text="Quantity" />
                   <TableColumn fx:id="colTotal" editable="false" prefWidth="75.0" text="Total" />
               </columns>
                <columnResizePolicy>
@@ -81,7 +81,7 @@
                   <Font name="System Bold" size="25.0" />
                </font>
             </Label>
-            <Label fx:id="lblSelectedItemDetails" layoutX="42.0" layoutY="408.0" prefHeight="17.0" prefWidth="300.0" text="Selected Item from table placeholder" />
+            <Label fx:id="lblSelectedItemDetails" layoutX="42.0" layoutY="408.0" prefHeight="58.0" prefWidth="300.0" text="Selected Item from table placeholder" wrapText="true" />
             <JFXComboBox fx:id="cmbDiscount" focusColor="DODGERBLUE" layoutX="29.0" layoutY="314.0" onAction="#cmbDiscountOnAction" prefHeight="25.0" prefWidth="154.0" promptText="Select Discount" style="-fx-text-align: left;" />
             <JFXButton fx:id="btnRemoveItem" layoutX="382.0" layoutY="395.0" onAction="#btnRemoveItemOnAction" prefHeight="31.0" prefWidth="145.0" style="-fx-border-radius: 5px;" styleClass="btn-delete" text="Remove Item">
                <font>
@@ -98,23 +98,23 @@
                   <Font size="15.0" />
                </font>
             </JFXButton>
-            <Label layoutX="301.0" layoutY="357.0" prefHeight="21.0" prefWidth="83.0" text="Net Total : ">
+            <Label layoutX="290.0" layoutY="357.0" prefHeight="21.0" prefWidth="108.0" text="Net Total (Rs.): ">
                <font>
                   <Font size="15.0" />
                </font>
             </Label>
-            <Label fx:id="lblNetTotal" alignment="CENTER_RIGHT" layoutX="384.0" layoutY="358.0" prefHeight="21.0" prefWidth="145.0" text="Net Total Placeholder" textAlignment="RIGHT">
+            <Label fx:id="lblNetTotal" alignment="CENTER_RIGHT" layoutX="394.0" layoutY="358.0" prefHeight="21.0" prefWidth="135.0" text="Net Total Placeholder" textAlignment="RIGHT">
                <font>
                   <Font size="15.0" />
                </font>
             </Label>
-            <Label layoutX="318.0" layoutY="317.0" prefHeight="21.0" prefWidth="64.0" text="Subtotal : " />
+            <Label layoutX="314.0" layoutY="318.0" prefHeight="21.0" prefWidth="91.0" text="Subtotal (Rs.) : " />
             <Label fx:id="lblSubTotal" alignment="CENTER_RIGHT" layoutX="384.0" layoutY="318.0" prefHeight="21.0" prefWidth="145.0" text="Sub Total Placeholder" textAlignment="RIGHT" />
          </children>
       </Pane>
-      <Pane layoutX="951.0" layoutY="374.0" prefHeight="298.0" prefWidth="300.0" styleClass="pane" stylesheets="@../asset/css/styles.css">
+      <Pane layoutX="951.0" layoutY="316.0" prefHeight="270.0" prefWidth="300.0" styleClass="pane" stylesheets="@../asset/css/styles.css">
          <children>
-            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="DODGERBLUE" height="38.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="300.0" />
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="DODGERBLUE" height="38.0" layoutY="-3.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="300.0" />
             <Label layoutX="73.0" layoutY="1.0" text="Order Details" textFill="#fffefe">
                <font>
                   <Font name="System Bold" size="25.0" />
@@ -126,7 +126,7 @@
             <Label layoutX="22.0" layoutY="139.0" prefHeight="17.0" prefWidth="32.0" text="Date" />
             <Label layoutX="22.0" layoutY="167.0" prefHeight="17.0" prefWidth="32.0" text="Time" />
             <Label layoutX="22.0" layoutY="197.0" prefHeight="17.0" prefWidth="51.0" text="Discount" />
-            <Label layoutX="22.0" layoutY="225.0" prefHeight="17.0" prefWidth="51.0" text="Net Total" />
+            <Label layoutX="22.0" layoutY="225.0" prefHeight="17.0" prefWidth="85.0" text="Net Total (Rs.)" />
             <Label layoutX="118.0" layoutY="56.0" prefHeight="17.0" prefWidth="14.0" text=":" />
             <Label layoutX="118.0" layoutY="83.0" prefHeight="17.0" prefWidth="14.0" text=":" />
             <Label layoutX="118.0" layoutY="111.0" prefHeight="17.0" prefWidth="14.0" text=":" />
@@ -192,5 +192,10 @@
             </Label>
          </children>
       </Pane>
+      <JFXButton fx:id="btnNextOrder" layoutX="1106.0" layoutY="623.0" onAction="#btnNextOrderOnAction" prefHeight="25.0" prefWidth="145.0" styleClass="btn-add" stylesheets="@../asset/css/styles.css" text="Next Order">
+         <font>
+            <Font size="15.0" />
+         </font>
+      </JFXButton>
    </children>
 </AnchorPane>

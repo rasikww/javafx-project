@@ -6,7 +6,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Builder
 public class CartTable {
     private String itemCode;
     private String desc;

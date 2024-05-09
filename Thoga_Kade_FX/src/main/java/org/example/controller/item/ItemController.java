@@ -2,12 +2,15 @@ package org.example.controller.item;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.example.crudUtil.CrudUtil;
 import org.example.db.DBConnection;
 import org.example.model.Item;
+import org.example.model.OrderDetail;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 public class ItemController {
     private static ItemController instance;
@@ -61,6 +64,28 @@ public class ItemController {
             return item.getQtyOnHand() >= requiredQty;
         } catch (NumberFormatException | NullPointerException e ) {
             return false;
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean updateStock(List<OrderDetail> orderDetailList){
+        for (OrderDetail orderDetail : orderDetailList) {
+            boolean isUpdated = updateStock(orderDetail);
+            if (!isUpdated){
+                return false;
+            }
+        }
+        return true;
+    }
+    public boolean updateStock(OrderDetail orderDetail){
+        try {
+            Object isUpdated = CrudUtil.execute(
+                    "UPDATE item SET QtyOnHand=QtyOnHand-? WHERE ItemCode=?",
+                    orderDetail.getQty(),
+                    orderDetail.getItemCode()
+            );
+            return (boolean) isUpdated;
         } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

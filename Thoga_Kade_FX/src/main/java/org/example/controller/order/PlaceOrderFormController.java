@@ -15,17 +15,23 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
 import javafx.util.Duration;
 import org.example.controller.customer.CustomerController;
 import org.example.controller.item.ItemController;
 import org.example.model.Customer;
 import org.example.model.Item;
+import org.example.model.Order;
+import org.example.model.OrderDetail;
 import org.example.model.tm.CartTable;
 
 import java.net.URL;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Date;
 
@@ -39,14 +45,16 @@ public class PlaceOrderFormController implements Initializable {
     public TableColumn<CartTable,Integer> colQty;
     public TableColumn<CartTable,Double> colTotal;
     public Label lblSelectedItemDetails;
-    public JFXButton btnRemoveItem,btnRemoveAll,btnPlaceOrder;
+    public JFXButton btnRemoveItem,btnRemoveAll,btnPlaceOrder,btnAddToCart,btnNextOrder;
     public Label lblNetTotal,lblSubTotal,lblItemDesc;
     public Label lblItemPackSize,lblItemUnitPrice,lblItemQuantityAvailable;
     public JFXTextField txtItemQty;
-    public JFXButton btnAddToCart;
     public Label lblOrderId,lblODCustomerId,lblODCustomerName,lblODDate,lblODTime,lblODDiscount,lblODNetTotal;
     public Label lblCurrentDate,lblCurrentTime,lblCurrentOrderId;
     private ObservableList<CartTable> cartTableList = FXCollections.observableArrayList();
+    private Double discount = 0.0;
+    private CartTable selectedCartTable = null;
+    private Customer selectedCustomer;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -55,6 +63,22 @@ public class PlaceOrderFormController implements Initializable {
         loadDateAndTime();
         displayOrderId();
         loadCartTable();
+        btnRemoveItem.setDisable(true);
+        btnPlaceOrder.setDisable(true);
+        tblCart.getFocusModel().focusedIndexProperty().addListener((obs, oldIndex, newIndex) -> {
+            if (newIndex != null && newIndex.intValue() >= 0) {
+                // Get the selected item at the new focused index
+                selectedCartTable = tblCart.getItems().get(newIndex.intValue());
+                if (selectedCartTable != null) {
+                    showSelectedItemDetails(selectedCartTable);
+                    btnRemoveItem.setDisable(false);
+                }
+            }
+        });
+    }
+
+    private void showSelectedItemDetails(CartTable selectedCartTable) {
+        lblSelectedItemDetails.setText("Selected Item : "+selectedCartTable.getDesc()+" with item code: "+selectedCartTable.getItemCode());
     }
 
     private void displayOrderId() {
@@ -80,13 +104,14 @@ public class PlaceOrderFormController implements Initializable {
     }
 
     private void clearLblsCmbsTxts() {
-        cmbCustomer.getSelectionModel().clearSelection();
+        cmbCustomer.getSelectionModel().select(0);
         lblCustomerName.setText(null);
         lblCustomerAddress.setText(null);
         lblCustomerCity.setText(null);
         lblCustomerProvince.setText(null);
 
-        cmbItem.getSelectionModel().clearSelection();
+        cmbItem.getSelectionModel().select(0);
+
         cmbItem.setDisable(true);
         lblItemDesc.setText(null);
         lblItemPackSize.setText(null);
@@ -96,7 +121,7 @@ public class PlaceOrderFormController implements Initializable {
         txtItemQty.setDisable(true);
         btnAddToCart.setDisable(true);
 
-        cmbDiscount.getSelectionModel().clearSelection();
+        cmbDiscount.getSelectionModel().select(0);
 
         lblSubTotal.setText(null);
         lblNetTotal.setText(null);
@@ -141,30 +166,112 @@ public class PlaceOrderFormController implements Initializable {
     public void cmbCustomerOnAction(ActionEvent actionEvent) {
         String selectedCustomerID = cmbCustomer.getSelectionModel().getSelectedItem().split(" - ")[0];
         try {
-            Customer customer = CustomerController.getInstance().searchCustomer(selectedCustomerID);
-            lblCustomerName.setText(customer.getName());
-            lblCustomerAddress.setText(customer.getAddress());
-            lblCustomerCity.setText(customer.getCity());
-            lblCustomerProvince.setText(customer.getProvince());
+            selectedCustomer = CustomerController.getInstance().searchCustomer(selectedCustomerID);
+            lblCustomerName.setText(selectedCustomer.getName());
+            lblCustomerAddress.setText(selectedCustomer.getAddress());
+            lblCustomerCity.setText(selectedCustomer.getCity());
+            lblCustomerProvince.setText(selectedCustomer.getProvince());
         } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
         cmbItem.setDisable(false);
     }
 
-    public void colQtyOnEdit(TableColumn.CellEditEvent cellEditEvent) {
-    }
-
     public void btnRemoveItemOnAction(ActionEvent actionEvent) {
+        boolean isRemoved = cartTableList.remove(selectedCartTable);
+        if (isRemoved) new Alert(Alert.AlertType.CONFIRMATION,"Item: "+selectedCartTable.getDesc()+" Removed from cart").show();
+        else new Alert(Alert.AlertType.ERROR,"Cannot remove item").show();
+        lblSubTotal.setText(String.valueOf(calculateTotal()));
+        Double netTotal = calculateNetTotal(discount);
+        lblNetTotal.setText(String.valueOf(netTotal));
+        lblSelectedItemDetails.setText(null);
+        btnRemoveItem.setDisable(true);
+        if (cartTableList.isEmpty()){
+            btnPlaceOrder.setDisable(true);
+        }
     }
 
     public void btnRemoveAllOnAction(ActionEvent actionEvent) {
+        cartTableList.clear();
+        new Alert(Alert.AlertType.CONFIRMATION,"Removed all items from cart");
+        lblSubTotal.setText(String.valueOf(calculateTotal()));
+        Double netTotal = calculateNetTotal(discount);
+        lblNetTotal.setText(String.valueOf(netTotal));
+        lblSelectedItemDetails.setText(null);
+        btnPlaceOrder.setDisable(true);
     }
 
     public void btnPlaceOrderOnAction(ActionEvent actionEvent) {
+        cmbItem.setDisable(true);
+        txtItemQty.setDisable(true);
+        btnAddToCart.setDisable(true);
+
+        tblCart.setDisable(true);
+        cmbDiscount.setDisable(true);
+
+        btnRemoveItem.setDisable(true);
+        btnRemoveAll.setDisable(true);
+
+        String orderId = lblCurrentOrderId.getText();
+        String customerId = selectedCustomer.getId();
+        LocalDate date = LocalDate.now();
+
+
+        lblOrderId.setText(orderId);
+        lblODCustomerId.setText(customerId);
+        lblODCustomerName.setText(selectedCustomer.getName());
+        lblODDate.setText(lblCurrentDate.getText());
+        lblODTime.setText(lblCurrentTime.getText());
+        lblODDiscount.setText(discount+" %");
+        lblODNetTotal.setText(lblNetTotal.getText());
+
+        btnPlaceOrder.setDisable(true);
+
+        List<OrderDetail> orderList = new ArrayList<>();
+        for (CartTable row : cartTableList) {
+            OrderDetail orderDetail = new OrderDetail(
+                    orderId,
+                    row.getItemCode(),
+                    row.getQty(),
+                    discount
+            );
+            orderList.add(orderDetail);
+        }
+
+        Order newOrder = Order.builder()
+                .orderId(orderId)
+                .orderDate(date)
+                .custId(customerId)
+                .orderDetailList(orderList)
+                .build();
+
+        boolean isOrderPlaced = OrderController.getInstance().placeOrder(newOrder);
+
+        if (isOrderPlaced){
+            new Alert(Alert.AlertType.CONFIRMATION,"Order Added Successfully").show();
+        }else{
+            new Alert(Alert.AlertType.ERROR,"Order was not successfull").show();
+        }
     }
 
+
     public void cmbDiscountOnAction(ActionEvent actionEvent) {
+        discount = Double.parseDouble(cmbDiscount.getSelectionModel().getSelectedItem().split("%")[0]);
+        Double netTotal = calculateNetTotal(discount);
+        lblNetTotal.setText(String.valueOf(netTotal));
+    }
+
+    private Double calculateNetTotal(Double discount) {
+        Double subTotal = calculateTotal();
+        return subTotal-subTotal*discount/100;
+    }
+
+    private Double calculateTotal() {
+        Double totalValue = 0.0;
+        for (CartTable cartTable : cartTableList) {
+            totalValue += cartTable.getTotal();
+        }
+        return totalValue;
     }
 
     public void cmbItemOnAction(ActionEvent actionEvent) {
@@ -178,22 +285,18 @@ public class PlaceOrderFormController implements Initializable {
         } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+        txtItemQty.setText(null);
         txtItemQty.setDisable(false);
         btnAddToCart.setDisable(false);
+
     }
 
     public void txtItemQtyOnAction(ActionEvent actionEvent) {
+        addToCartBtnProcess();
     }
 
     public void btnAddToCartOnAction(ActionEvent actionEvent) {
-        cmbCustomer.setDisable(true);
-        String selectedItemCode = cmbItem.getSelectionModel().getSelectedItem().split(" - ")[0];
-        Boolean isValidQty = ItemController.getInstance().validateQty(selectedItemCode,txtItemQty.getText());
-        if (!isValidQty) {
-            new Alert(Alert.AlertType.ERROR, "Please Check Required Quantity").show();
-        }else {
-            addToCartTable(selectedItemCode,txtItemQty.getText());
-        }
+        addToCartBtnProcess();
     }
 
     private void addToCartTable(String selectedItemCode, String qtyString) {
@@ -219,5 +322,46 @@ public class PlaceOrderFormController implements Initializable {
         colUnitPrice.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
         colQty.setCellValueFactory(new PropertyValueFactory<>("qty"));
         colTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
+    }
+
+    public void tblViewOnMouseClick(MouseEvent mouseEvent) {
+        selectedCartTable = tblCart.getSelectionModel().getSelectedItem();
+        lblSelectedItemDetails.setText("Selected Item : "+selectedCartTable.getDesc()+" with item code: "+selectedCartTable.getItemCode());
+        btnRemoveItem.setDisable(false);
+    }
+    private void addToCartBtnProcess(){
+        btnRemoveAll.setDisable(false);
+        cmbCustomer.setDisable(true);
+        String selectedItemCode = cmbItem.getSelectionModel().getSelectedItem().split(" - ")[0];
+        Boolean isValidQty = ItemController.getInstance().validateQty(selectedItemCode,txtItemQty.getText());
+        if (!isValidQty) {
+            new Alert(Alert.AlertType.ERROR, "Please Check Required Quantity").show();
+        }else {
+            addToCartTable(selectedItemCode,txtItemQty.getText());
+            lblSubTotal.setText(String.valueOf(calculateTotal()));
+            Double netTotal = calculateNetTotal(discount);
+            lblNetTotal.setText(String.valueOf(netTotal));
+        }
+        if (cartTableList.isEmpty()){
+            btnPlaceOrder.setDisable(true);
+        }else{
+            btnPlaceOrder.setDisable(false);
+        }
+    }
+
+    public void btnNextOrderOnAction(ActionEvent actionEvent) {
+
+        cartTableList.clear();
+        discount = 0.0;
+        selectedCartTable = null;
+
+        displayOrderId();
+        btnRemoveItem.setDisable(true);
+        btnPlaceOrder.setDisable(true);
+        cmbCustomer.setDisable(false);
+        tblCart.setDisable(false);
+        cmbDiscount.setDisable(false);
+
+        clearLblsCmbsTxts();
     }
 }
